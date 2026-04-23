@@ -215,7 +215,7 @@ address = random_address()
 card_name = random_card_name()
 
 # توكن البوت
-token = "8520709238:AAFf1psOsYuulYR2goGOYEObBunbd42mlrA"
+token = "8787566674:AAHu_bF_LqXZolj_2j1iMQMC1onMst8dgrE"
 bot = telebot.TeleBot(token, parse_mode="HTML")
 
 # ايدي حسابك
