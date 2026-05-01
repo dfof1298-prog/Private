@@ -230,8 +230,8 @@ def look(cc_line):
     user = generate_user_agent()
     
     try:
-        url = 'https://www.theflorentine.net/support-the-florentine/'
-        url_ajax = 'https://www.theflorentine.net/wordpress/wp-admin/admin-ajax.php'
+        url = 'https://beingkid.org/donations/sponsorship-opportunities-for-classes-events/'
+        url_ajax = 'https://beingkid.org/wordpress/wp-admin/admin-ajax.php'
         
         headers = {'user-agent': user}
         r = s.get(url, headers=headers)
