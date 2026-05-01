@@ -3,7 +3,7 @@ from user_agent import generate_user_agent
 from datetime import datetime, timedelta
 import string
 
-BOT_TOKEN = "8787566674:AAGY66cyvKfkRJ9MmdQmE79WW1TsACiE6hQ"
+BOT_TOKEN = "8732070263:AAHwNJj0plhZpVuYBNZV5T4RZvQ-2USBWNk"
 ADMIN_ID = 1093032296  # غير ده بإيديك انت
 active_scans = {}
 MAX_CARDS_PER_USER = 1000
